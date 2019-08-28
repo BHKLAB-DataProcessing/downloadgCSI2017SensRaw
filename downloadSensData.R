@@ -1,4 +1,4 @@
-library(PharmacoGxPrivate)
+library(PharmacoGx)
 library(devtools)
 
 load("/pfs/gcsi2017raw/sensitivity.RData") #issue with Docker image. This is temp.
