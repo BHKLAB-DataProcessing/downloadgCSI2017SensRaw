@@ -4,7 +4,7 @@ library(devtools)
 # install.packages("BiocManager")
 library(BiocManager)
 message("trying install BiocManager")
-
+message(.libPaths())
 install(c("multtest", "NMF", "rmarkdown", "RColorBrewer"))
 
 library(devtools)
