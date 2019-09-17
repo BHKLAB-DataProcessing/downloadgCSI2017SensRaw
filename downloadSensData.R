@@ -1,7 +1,7 @@
 library(PharmacoGx)
 library(devtools)
 
-install.packages("BiocManager")
+# install.packages("BiocManager")
 library(BiocManager)
 install(c("multtest", "NMF", "rmarkdown", "RColorBrewer"))
 library(devtools)
