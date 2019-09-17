@@ -4,8 +4,9 @@ library(devtools)
 # install.packages("BiocManager")
 library(BiocManager)
 install(c("multtest", "NMF", "rmarkdown", "RColorBrewer"))
-library(devtools)
 
+library(devtools)
+message("tryin insstall")
 install_url("http://research-pub.gene.com/gCSI-cellline-data/compareDrugScreens_current.tar.gz")
 
 # load("/pfs/gcsi2017raw/sensitivity.RData") #issue with Docker image. This is temp.
