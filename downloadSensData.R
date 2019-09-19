@@ -15,6 +15,111 @@ install_url("http://research-pub.gene.com/gCSI-cellline-data/compareDrugScreens_
 
 library(compareDrugScreens)
 
+#####################################################
+######### Prepare published molecular data ##########
+#####################################################
+    
+
+
+data("gcsi.genomics")
+data(gcsi.genomics.mask)
+data("ccle.gcsi.long")
+data("gcsi.genomics.feature.info")
+data("gcsi.line.info")
+
+
+data.types <- sapply(strsplit(colnames(gcsi.genomics), split = "\\."), function(x) return(x[[1]]))
+
+
+rownames(gcsi.genomics) <- gcsi.line.info[rownames(gcsi.genomics),"CellLineName"]
+
+
+gcsi.genomics[gcsi.genomics.mask] <- NA
+
+rnaseq <- gcsi.genomics[,data.types=="vsd"]
+colnames(rnaseq) <- gsub("vsd.GeneID:", "", colnames(rnaseq))
+
+##Check:
+any(duplicated(colnames(rnaseq)))
+rnaseq  <- t(rnaseq)
+
+cnv <- gcsi.genomics[,data.types=="cn"]
+
+colnames(cnv) <- gsub("cn.GeneID:", "", colnames(cnv))
+any(duplicated(colnames(cnv)))
+cnv <- t(cnv)
+
+loh <- gcsi.genomics[,data.types=="loh"]
+
+colnames(loh) <- gsub("loh.GeneID:", "", colnames(loh))
+any(duplicated(colnames(loh)))
+loh <- t(loh)
+
+mut <- gcsi.genomics[,data.types=="mut"]
+
+colnames(mut) <- gsub("mut.GeneID:", "", colnames(mut))
+any(duplicated(colnames(mut)))
+mut <- t(mut)
+
+mutp <- gcsi.genomics[,data.types=="mutp"]
+colnames(mutp) <- gsub("mutp.GeneID:", "", colnames(mutp))
+any(duplicated(colnames(mutp)))
+mutp <- t(mutp)
+
+
+hot <- gcsi.genomics[,data.types=="hot"]
+colnames(hot) <- gsub("hot.GeneID:", "", colnames(hot))
+any(duplicated(colnames(hot)))
+hot <- t(hot)
+
+cellInfo <- gcsi.genomics[,data.types=="cln"]
+colnames(cellInfo) <- gsub("cln.", "", colnames(cellInfo))
+
+rownames(gcsi.genomics.feature.info) <- gsub("GeneID:", "", rownames(gcsi.genomics.feature.info))
+
+molecInfo <- data.frame(cellid=colnames(rnaseq), row.names=colnames(rnaseq))
+molecInfo <- cbind(molecInfo, tissueid=NA, batchid=NA)
+
+rnaseq <- ExpressionSet(rnaseq)
+pData(rnaseq) <- molecInfo
+fData(rnaseq) <- gcsi.genomics.feature.info[rownames(rnaseq),]
+annotation(rnaseq) <- "rna"
+
+
+cnv <- ExpressionSet(cnv)
+pData(cnv) <- molecInfo
+fData(cnv) <- gcsi.genomics.feature.info[rownames(cnv),]
+annotation(cnv) <- "cnv"
+
+loh <- ExpressionSet(loh)
+pData(loh) <- molecInfo
+fData(loh) <- gcsi.genomics.feature.info[rownames(loh),]
+
+mut <- ExpressionSet(mut)
+pData(mut) <- molecInfo
+fData(mut) <- gcsi.genomics.feature.info[rownames(mut),]
+annotation(mut) <- "mutation"
+
+symbol <- gcsi.genomics.feature.info[rownames(mutp),]
+rownames(mutp) <- symbol$Symbol
+mutp <- ExpressionSet(mutp)
+pData(mutp) <- molecInfo
+fData(mutp) <- gcsi.genomics.feature.info[gcsi.genomics.feature.info$Symbol %in% rownames(mutp),]
+rownames(fData(mutp)) <- rownames(mutp)
+
+hot <- ExpressionSet(hot)
+pData(hot) <- molecInfo
+fData(hot) <- gcsi.genomics.feature.info[rownames(hot),]
+
+save(rnaseq, cnv, loh, mut, mutp, hot, cellInfo, file="/pfs/out/gCSI_molData.RData")
+
+
+#####################################################
+########### 2017 DATA (OLD) - SENSITIVITY ###########
+#####################################################
+    
+
+
 data("ccle.gcsi.long")
 
 
@@ -26,6 +131,8 @@ gcsi.long <- ccle.gcsi.long[Group=="gCSI"]
 
 
 gcsi.long[,Group:=NULL]
+
+gcsi.long[,CellLine := gcsi.line.info[CellLine, "CellLineName"]]
 
 gcsi.long[,exp := paste(gcsi.long[,CellLine], gcsi.long[,Drug], sep="_")]
 
@@ -52,11 +159,63 @@ for (experiment in nconc[,exp]){
 raw.sensitivity[,,"Viability"] <- raw.sensitivity[,,"Viability"]*100
 gcsi.long[,`:=`(cellid = CellLine, drugid = Drug)]
 
-sensitivity.info <- as.data.frame(gcsi.long[,.(unique(drugid),unique(cellid)), by=exp])
-rownames(sensitivity.info) <- sensitivity.info$exp
-colnames(sensitivity.info) <- c("expid", "drugid", "cellid")
+## NB: there are more computed experiments than row, so we use the computed values to create the sens_info tbl. 
+## differences seem to be from the sr786 cell line
 
-save(sensitivity.info, raw.sensitivity, file="/pfs/out/raw.sensitivity.RData")
+## Prepare published IC50 values
+
+data(gcsi.ic50)
+
+
+gcsi.ic50 <- melt(gcsi.ic50, na.rm=TRUE)
+
+colnames(gcsi.ic50) <- c("cellid","drugid", "IC50")
+
+gcsi.ic50$cellid <- gcsi.line.info[gcsi.ic50$cellid, "CellLineName"]
+
+experiments <- paste(gcsi.ic50[,"cellid"], gcsi.ic50[,"drugid"], sep="_")
+
+
+#### Where did these come from?
+experiments[which(!experiments %in% gcsi.long[,exp] )]
+
+experiments[duplicated(experiments)] <- paste(experiments[duplicated(experiments)], "rep2", sep="_")
+
+rownames(gcsi.ic50) <- experiments
+
+
+sensitivity.info <- gcsi.ic50[,c("cellid", "drugid")]
+
+# extra_rows <- rownames(sensitivity.info)[which(!rownames(sensitivity.info) %in% rownames(raw.sensitivity))]
+
+
+data(gcsi.mv)
+gcsi.mv <- melt(gcsi.mv, na.rm=TRUE)
+
+colnames(gcsi.mv) <- c("cellid","drugid", "Mean Viability")
+gcsi.mv$cellid <- gcsi.line.info[gcsi.mv$cellid, "CellLineName"]
+
+
+experiments3 <- paste(gcsi.mv[,"cellid"], gcsi.mv[,"drugid"], sep="_")
+
+#### Where did these come from?
+experiments3[which(!experiments3 %in% gcsi.long[,exp] )]
+
+experiments3[duplicated(experiments3)] <- paste(experiments3[duplicated(experiments3)], "rep2", sep="_")
+
+rownames(gcsi.mv) <- experiments3
+
+stopifnot(all(rownames(gcsi.mv) %in% rownames(sensitivity.info)))
+stopifnot(all(rownames(raw.sensitivity) %in% rownames(sensitivity.info)))
+
+gcsi.ic50 <- gcsi.ic50[rownames(sensitivity.info),]
+gcsi.mv <- gcsi.mv[rownames(sensitivity.info),]
+
+published.profiles <- data.frame(mean.viability_published = gcsi.mv[,"Mean Viability"], 
+								 ic50_published = gcsi.ic50[,"IC50"])
+rownames(published.profiles) <- rownames(sensitivity.info)
+
+save(sensitivity.info, raw.sensitivity, gcsi.long, published.profiles, file="/pfs/out/raw.sensitivity.RData")
 
 raw.sensitivity <- raw.sensitivity
 
