@@ -19,6 +19,7 @@ library(compareDrugScreens)
 ######### Prepare published molecular data ##########
 #####################################################
     
+options(stringsAsFactors = FALSE)
 
 
 data("gcsi.genomics")
