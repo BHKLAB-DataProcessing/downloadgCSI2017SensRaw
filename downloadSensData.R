@@ -58,6 +58,8 @@ colnames(sensitivity.info) <- c("expid", "drugid", "cellid")
 
 save(sensitivity.info, sensitivityRaw, file="/pfs/out/sensitivityRaw.RData")
 
+raw.sensitivity <- sensitivityRaw
+
 raw.sensitivity.x <- parallel::splitIndices(nrow(raw.sensitivity), floor(nrow(raw.sensitivity)/1000))
 
 dir.create("/pfs/out/slices/")
