@@ -28,7 +28,7 @@ data("ccle.gcsi.long")
 data("gcsi.genomics.feature.info")
 data("gcsi.line.info")
 
-
+geneMap <- read.csv(file.path(myDirPrefix, "downAnnotations/annot_ensembl_all_genes.csv"))
 data.types <- sapply(strsplit(colnames(gcsi.genomics), split = "\\."), function(x) return(x[[1]]))
 
 
@@ -36,7 +36,9 @@ rownames(gcsi.genomics) <- gcsi.line.info[rownames(gcsi.genomics),"CellLineName"
 
 
 gcsi.genomics[gcsi.genomics.mask] <- NA
-
+gcsi.genomics.feature.info$GeneID <- gsub("GeneID:","",gcsi.genomics.feature.info$GeneID)	     
+gcsi.genomics.feature.info <- gcsi.genomics.feature.info[-which(gcsi.genomics.feature.info$Symbol==""),]
+		     
 rnaseq <- gcsi.genomics[,data.types=="vsd"]
 colnames(rnaseq) <- gsub("vsd.GeneID:", "", colnames(rnaseq))
 
@@ -49,6 +51,9 @@ cnv <- gcsi.genomics[,data.types=="cn"]
 colnames(cnv) <- gsub("cn.GeneID:", "", colnames(cnv))
 any(duplicated(colnames(cnv)))
 cnv <- t(cnv)
+rownames(cnv) <- gcsi.genomics.feature.info$Symbol[match(rownames(cnv), gcsi.genomics.feature.info$GeneID)]		     
+cnv <- cnv[-which(duplicated(rownames(cnv))),]
+cnv <- cnv[na.omit(rownames(cnv)),]		     
 
 loh <- gcsi.genomics[,data.types=="loh"]
 
@@ -61,6 +66,8 @@ mut <- gcsi.genomics[,data.types=="mut"]
 colnames(mut) <- gsub("mut.GeneID:", "", colnames(mut))
 any(duplicated(colnames(mut)))
 mut <- t(mut)
+rownames(mut) <- gcsi.genomics.feature.info$Symbol[match(rownames(mut), gcsi.genomics.feature.info$GeneID)]		     
+	     
 
 mutp <- gcsi.genomics[,data.types=="mutp"]
 colnames(mutp) <- gsub("mutp.GeneID:", "", colnames(mutp))
@@ -79,41 +86,48 @@ colnames(cellInfo) <- gsub("cln.", "", colnames(cellInfo))
 rownames(gcsi.genomics.feature.info) <- gsub("GeneID:", "", rownames(gcsi.genomics.feature.info))
 
 molecInfo <- data.frame(cellid=colnames(rnaseq), row.names=colnames(rnaseq))
-molecInfo <- cbind(molecInfo, tissueid=NA, batchid=NA)
-
-rnaseq <- ExpressionSet(rnaseq)
-pData(rnaseq) <- molecInfo
-fData(rnaseq) <- gcsi.genomics.feature.info[rownames(rnaseq),]
-annotation(rnaseq) <- "rna"
-
+molecInfo <- cbind(molecInfo, batchid=NA)		     
+		     
+#rnaseq <- ExpressionSet(rnaseq)
+#pData(rnaseq) <- molecInfo
+#fData(rnaseq) <- gcsi.genomics.feature.info[rownames(rnaseq),]
+#annotation(rnaseq) <- "rna"
 
 cnv <- ExpressionSet(cnv)
 pData(cnv) <- molecInfo
-fData(cnv) <- gcsi.genomics.feature.info[rownames(cnv),]
+geneInfoM <- geneMap[match(rownames(cnv),geneMap[ , "gene_name"]), c("gene_id", "EntrezGene.ID", "gene_name", "gene_biotype")]
+rownames(geneInfoM) <- rownames(cnv) 
+geneInfoM <- geneInfoM[rownames(cnv),]
+colnames(geneInfoM) <- c("EnsemblGeneId", "EntrezGeneId", "Symbol", "GeneBioType")
+fData(cnv) <- geneInfoM		     
 annotation(cnv) <- "cnv"
 
-loh <- ExpressionSet(loh)
-pData(loh) <- molecInfo
-fData(loh) <- gcsi.genomics.feature.info[rownames(loh),]
-
+#loh <- ExpressionSet(loh)
+#pData(loh) <- molecInfo
+#fData(loh) <- gcsi.genomics.feature.info[rownames(loh),]
+		     
 mut <- ExpressionSet(mut)
 pData(mut) <- molecInfo
-fData(mut) <- gcsi.genomics.feature.info[rownames(mut),]
+geneInfoM <- geneMap[match(rownames(mut),geneMap[ , "gene_name"]), c("gene_id", "EntrezGene.ID", "gene_name", "gene_biotype")]
+rownames(geneInfoM) <- rownames(mut) 
+geneInfoM <- geneInfoM[rownames(mut),]
+colnames(geneInfoM) <- c("EnsemblGeneId", "EntrezGeneId", "Symbol", "GeneBioType")
+fData(mut) <- geneInfoM			     
 annotation(mut) <- "mutation"
 
-symbol <- gcsi.genomics.feature.info[rownames(mutp),]
-rownames(mutp) <- symbol$Symbol
-mutp <- ExpressionSet(mutp)
-pData(mutp) <- molecInfo
-fData(mutp) <- gcsi.genomics.feature.info[gcsi.genomics.feature.info$Symbol %in% rownames(mutp),]
-rownames(fData(mutp)) <- rownames(mutp)
+#symbol <- gcsi.genomics.feature.info[rownames(mutp),]
+#rownames(mutp) <- symbol$Symbol
+#mutp <- ExpressionSet(mutp)
+#pData(mutp) <- molecInfo
+#fData(mutp) <- gcsi.genomics.feature.info[gcsi.genomics.feature.info$Symbol %in% rownames(mutp),]
+#rownames(fData(mutp)) <- rownames(mutp)
 
-hot <- ExpressionSet(hot)
-pData(hot) <- molecInfo
-fData(hot) <- gcsi.genomics.feature.info[rownames(hot),]
+#hot <- ExpressionSet(hot)
+#pData(hot) <- molecInfo
+#fData(hot) <- gcsi.genomics.feature.info[rownames(hot),]
 
-save(rnaseq, cnv, loh, mut, mutp, hot, cellInfo, file="/pfs/out/gCSI_molData.RData")
-
+#save(rnaseq, cnv, loh, mut, mutp, hot, cellInfo, file="/pfs/out/gCSI_molData.RData")
+save(cnv,mut,cellInfo, file="/pfs/out/gCSI_molData.RData")
 
 #####################################################
 ########### 2017 DATA (OLD) - SENSITIVITY ###########
