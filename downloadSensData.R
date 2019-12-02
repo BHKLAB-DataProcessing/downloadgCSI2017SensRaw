@@ -28,7 +28,7 @@ data("ccle.gcsi.long")
 data("gcsi.genomics.feature.info")
 data("gcsi.line.info")
 
-geneMap <- read.csv(file.path(myDirPrefix, "downAnnotations/annot_ensembl_all_genes.csv"))
+geneMap <- read.csv("/pfs/downAnnotations/annot_ensembl_all_genes.csv")
 data.types <- sapply(strsplit(colnames(gcsi.genomics), split = "\\."), function(x) return(x[[1]]))
 
 
