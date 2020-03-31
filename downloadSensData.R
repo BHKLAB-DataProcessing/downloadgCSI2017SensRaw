@@ -2,14 +2,14 @@ library(PharmacoGx)
 # library(devtools)
 
 # install.packages("BiocManager")
-library(BiocManager)
-message("trying install BiocManager")
-message(.libPaths())
-install(c("multtest", "NMF", "rmarkdown", "RColorBrewer"))
+#library(BiocManager)
+#message("trying install BiocManager")
+#message(.libPaths())
+#install(c("multtest", "NMF", "rmarkdown", "RColorBrewer"))
 
-library(devtools)
-message("trying install")
-install_url("http://research-pub.gene.com/gCSI-cellline-data/compareDrugScreens_current.tar.gz")
+#library(devtools)
+#message("trying install")
+#install_url("http://research-pub.gene.com/gCSI-cellline-data/compareDrugScreens_current.tar.gz")
 
 # load("/pfs/gcsi2017raw/sensitivity.RData") #issue with Docker image. This is temp.
 
