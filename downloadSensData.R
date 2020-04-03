@@ -1,16 +1,4 @@
 library(PharmacoGx)
-library(BiocManager)
-#message("trying install BiocManager")
-message(.libPaths())
-install(c("multtest", "NMF", "rmarkdown", "RColorBrewer"))
-
-PackageUrl <- "https://cran.r-project.org/src/contrib/Archive/glmnet/glmnet_2.0-13.tar.gz"
-install.packages(PackageUrl, repos=NULL, type="source")
-
-library(devtools)
-message("trying install")
-install_url("http://research-pub.gene.com/gCSI-cellline-data/compareDrugScreens_current.tar.gz")
-
 library(compareDrugScreens)
 
 #####################################################
