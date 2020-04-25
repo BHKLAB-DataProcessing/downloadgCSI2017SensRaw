@@ -14,7 +14,9 @@ data("ccle.gcsi.long")
 data("gcsi.genomics.feature.info")
 data("gcsi.line.info")
 
-geneMap <- read.csv("/pfs/downAnnotations/annot_ensembl_all_genes.csv")
+load("/pfs/downAnnotations/Ensembl.v99.annotation.RData")
+geneMap <- features_gene
+
 data.types <- sapply(strsplit(colnames(gcsi.genomics), split = "\\."), function(x) return(x[[1]]))
 
 
@@ -81,10 +83,10 @@ molecInfo <- cbind(molecInfo, batchid=NA)
 
 cnv <- ExpressionSet(cnv)
 pData(cnv) <- molecInfo
-geneInfoM <- geneMap[match(rownames(cnv),geneMap[ , "gene_name"]), c("gene_id", "EntrezGene.ID", "gene_name", "gene_biotype")]
+geneInfoM <- geneMap[match(rownames(cnv),geneMap[ , "gene_name"]), c("gene_id", "gene_name", "gene_biotype")]
 rownames(geneInfoM) <- rownames(cnv) 
 geneInfoM <- geneInfoM[rownames(cnv),]
-colnames(geneInfoM) <- c("EnsemblGeneId", "EntrezGeneId", "Symbol", "GeneBioType")
+colnames(geneInfoM) <- c("EnsemblGeneId", "Symbol", "GeneBioType")
 fData(cnv) <- geneInfoM		     
 annotation(cnv) <- "cnv"
 
@@ -94,10 +96,10 @@ annotation(cnv) <- "cnv"
 		     
 mut <- ExpressionSet(mut)
 pData(mut) <- molecInfo
-geneInfoM <- geneMap[match(rownames(mut),geneMap[ , "gene_name"]), c("gene_id", "EntrezGene.ID", "gene_name", "gene_biotype")]
+geneInfoM <- geneMap[match(rownames(mut),geneMap[ , "gene_name"]), c("gene_id", "gene_name", "gene_biotype")]
 rownames(geneInfoM) <- rownames(mut) 
 geneInfoM <- geneInfoM[rownames(mut),]
-colnames(geneInfoM) <- c("EnsemblGeneId", "EntrezGeneId", "Symbol", "GeneBioType")
+colnames(geneInfoM) <- c("EnsemblGeneId", "Symbol", "GeneBioType")
 fData(mut) <- geneInfoM			     
 annotation(mut) <- "mutation"
 
