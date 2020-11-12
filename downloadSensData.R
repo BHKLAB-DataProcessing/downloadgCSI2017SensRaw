@@ -55,18 +55,42 @@ colnames(mut) <- gsub("mut.GeneID:", "", colnames(mut))
 any(duplicated(colnames(mut)))
 mut <- t(mut)
 rownames(mut) <- gcsi.genomics.feature.info$Symbol[match(rownames(mut), gcsi.genomics.feature.info$GeneID)]		     
-	     
+
+### TODO:: This next part is a bit of a hack. We theorize that the Mutations were 0-1 encoded and then z-scored.
+### I am converting them back to a binary encoding, but still awaiting confirmation from Genentech that my interpretation
+### is correct. 
+mut <- t(apply(mut, 1, function(x) {
+	if(length(unique(x))==1){
+		return(rep("wt", length(x)))	
+	} else {
+		return(ifelse(x<0, "wt", "mut"))
+	}
+}))
 
 mutp <- gcsi.genomics[,data.types=="mutp"]
 colnames(mutp) <- gsub("mutp.GeneID:", "", colnames(mutp))
 any(duplicated(colnames(mutp)))
 mutp <- t(mutp)
-
+mutp <- t(apply(mutp, 1, function(x) {
+	if(length(unique(x))==1){
+		return(rep("wt", length(x)))	
+	} else {
+		return(ifelse(x<0, "wt", "mut"))
+	}
+}))
 
 hot <- gcsi.genomics[,data.types=="hot"]
-colnames(hot) <- gsub("hot.GeneID:", "", colnames(hot))
+colnames(hot) <- gsub("hot.", "", colnames(hot))
 any(duplicated(colnames(hot)))
 hot <- t(hot)
+
+hot <- t(apply(hot, 1, function(x) {
+	if(length(unique(x))==1){
+		return(rep("wt", length(x)))	
+	} else {
+		return(ifelse(x<0, "wt", "mut"))
+	}
+}))
 
 cellInfo <- gcsi.genomics[,data.types=="cln"]
 colnames(cellInfo) <- gsub("cln.", "", colnames(cellInfo))
