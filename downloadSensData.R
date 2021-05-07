@@ -30,7 +30,7 @@ gcsi.genomics.feature.info <- gcsi.genomics.feature.info[-which(gcsi.genomics.fe
 rnaseq <- gcsi.genomics[,data.types=="vsd"]
 colnames(rnaseq) <- gsub("vsd.GeneID:", "", colnames(rnaseq))
 
-##Check:
+##Check this:
 any(duplicated(colnames(rnaseq)))
 rnaseq  <- t(rnaseq)
 
